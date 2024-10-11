@@ -5,6 +5,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import Pipeline
 import matplotlib.pyplot as plt
 
 print ("############################################")
@@ -144,14 +145,20 @@ print (y_test.head())
 print ("#######################################")
 print ("## Build the Linear Regression Model ##")
 print ("#######################################")
-reg = LinearRegression()
-sc = StandardScaler(with_mean=True)
+#reg = LinearRegression()
+#sc = StandardScaler(with_mean=True)
+print ("Build steps for the pipeline with imputer and scalar")
+steps = [('sc', StandardScaler(with_mean=True)),
+         ('reg', LinearRegression())
+         ]
+pipeline = Pipeline(steps)
 
-X_train_sc = sc.fit_transform(X_train)
-X_test_sc  = sc.fit_transform(X_test)
+#X_train_sc = sc.fit_transform(X_train)
+#X_test_sc  = sc.fit_transform(X_test)
 
-reg.fit(X_train_sc,y_train)
-y_pred = reg.predict(X_test_sc)
+#reg.fit(X_train_sc,y_train)
+reg_scaled = pipeline.fit(X_train,y_train)
+y_pred = reg_scaled.predict(X_test)
 
 print ("########################")
 print ("## Predicted y values ##")
@@ -176,7 +183,8 @@ print (test_df.shape)
 test_df.reset_index(drop=True, inplace=True)
 test_pred_df = pd.concat([test_df, y_pred], axis=1)
 print (test_pred_df.head())
-scores = cross_val_score(reg, 
+#reg,
+scores = cross_val_score(pipeline,
                          X, 
                          y, 
                          scoring='r2', 
@@ -190,7 +198,7 @@ print ("## Test Linear Regression Model      ##")
 print ("#######################################")
 preproc_df = dataPreprocess(validation)
 print (preproc_df.head())
-predicted_ch = reg.predict(preproc_df)
+predicted_ch = pipeline.predict(preproc_df)
 validation["predicted_charges"] = predicted_ch
 validation.loc[validation['predicted_charges'] < 0, 'predicted_charges'] = 1000
 print (validation.head())
