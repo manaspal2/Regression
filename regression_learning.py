@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import root_mean_squared_error
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Ridge
+from sklearn.linear_model import Lasso
 from sklearn.model_selection import cross_val_score, KFold
 
 # Read data from CSV file
@@ -85,3 +87,53 @@ kf = KFold(n_splits=6, shuffle=True, random_state=42)
 reg = LinearRegression()
 cv_result = cross_val_score(reg, X, y, cv=kf)
 print (cv_result)
+
+#######################################################################################################
+# Mean Square error - One of the way to figure out the loss function
+# Goal should be to keep the loss function minimum.
+# In linear regression, large coefficinets like A1, B1(A1x1 + B1x2 .... = y) could cause over fitting
+# Controlling the large co-efficient is names as regularization
+# Of of the regularization is Ridge Regression where using hyperparameter alpha, the loss is minimized
+# and control model complexity. 
+# Zero value alpha -> Can cause overfitting
+# Large alpha -> Can cause underfitting
+# Find the effect of alpha in prediction
+# With alpha value increase, we sould see the score will be reducing.
+#######################################################################################################
+scores = []
+alpha_values = [0.1, 1.0, 10, 100, 100]
+for alpha in alpha_values:
+    ridge = Ridge(alpha=alpha)
+    ridge.fit(X_train,y_train)
+    y_pred = ridge.predict(X_test)
+    scores.append(ridge.score(X_test,y_test))
+
+print (scores)
+
+#######################################################################################################
+# Another method of reducing loss function is Lasso
+# Lasso regression can be used to select the improtant features
+# Lasso regression actually reduce the coefficient of not important features to zero or near about zero
+# and increases the important features' coefficent.
+#######################################################################################################
+scores = []
+Lasso_values = [0.1, 1.0, 10, 100, 100]
+for lasso in Lasso_values:
+    l1 = Lasso(alpha=lasso)
+    l1.fit(X_train,y_train)
+    y_pred = l1.predict(X_test)
+    scores.append(l1.score(X_test,y_test))
+
+print (scores)
+
+#######################################################################################################
+#Let's look at the coefficent adjustment
+#######################################################################################################
+X = diabetic_df.drop("Glucose", axis=1).values
+y= diabetic_df["Glucose"].values
+names = diabetic_df.drop("Glucose", axis=1).columns
+l1 = Lasso(alpha=0.1)
+l1_coeff = l1.fit(X,y).coef_
+plt.bar(names,l1_coeff)
+plt.xticks(rotation=45)
+plt.show()
